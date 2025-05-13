@@ -9,6 +9,7 @@
         "format": "c",
         "__tree": "c",
         "errno.h": "c",
-        "shm.h": "c"
+        "shm.h": "c",
+        "pthread.h": "c"
     }
 }

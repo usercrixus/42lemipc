@@ -5,22 +5,22 @@ static int count_cardinal_threats(t_player *p)
 	int count = 0;
 
 	if (p->y > 0 &&
-		shared->map[p->y - 1][p->x] != '0' &&
+		shared->map[p->y - 1][p->x] != EMPTY_TILE &&
 		shared->map[p->y - 1][p->x] != p->symbole)
 		count++;
 
 	if (p->y < MAP_HEIGHT - 1 &&
-		shared->map[p->y + 1][p->x] != '0' &&
+		shared->map[p->y + 1][p->x] != EMPTY_TILE &&
 		shared->map[p->y + 1][p->x] != p->symbole)
 		count++;
 
 	if (p->x > 0 &&
-		shared->map[p->y][p->x - 1] != '0' &&
+		shared->map[p->y][p->x - 1] != EMPTY_TILE &&
 		shared->map[p->y][p->x - 1] != p->symbole)
 		count++;
 
 	if (p->x < MAP_WIDTH - 1 &&
-		shared->map[p->y][p->x + 1] != '0' &&
+		shared->map[p->y][p->x + 1] != EMPTY_TILE &&
 		shared->map[p->y][p->x + 1] != p->symbole)
 		count++;
 
@@ -32,22 +32,22 @@ static int count_diagonal_threats(t_player *p)
 	int count = 0;
 
 	if (p->y > 0 && p->x > 0 &&
-		shared->map[p->y - 1][p->x - 1] != '0' &&
+		shared->map[p->y - 1][p->x - 1] != EMPTY_TILE &&
 		shared->map[p->y - 1][p->x - 1] != p->symbole)
 		count++;
 
 	if (p->y > 0 && p->x < MAP_WIDTH - 1 &&
-		shared->map[p->y - 1][p->x + 1] != '0' &&
+		shared->map[p->y - 1][p->x + 1] != EMPTY_TILE &&
 		shared->map[p->y - 1][p->x + 1] != p->symbole)
 		count++;
 
 	if (p->y < MAP_HEIGHT - 1 && p->x > 0 &&
-		shared->map[p->y + 1][p->x - 1] != '0' &&
+		shared->map[p->y + 1][p->x - 1] != EMPTY_TILE &&
 		shared->map[p->y + 1][p->x - 1] != p->symbole)
 		count++;
 
 	if (p->y < MAP_HEIGHT - 1 && p->x < MAP_WIDTH - 1 &&
-		shared->map[p->y + 1][p->x + 1] != '0' &&
+		shared->map[p->y + 1][p->x + 1] != EMPTY_TILE &&
 		shared->map[p->y + 1][p->x + 1] != p->symbole)
 		count++;
 
@@ -66,7 +66,7 @@ void setIsAlive()
 		if (surrounded >= 2)
 		{
 			p->isAlive = false;
-			shared->map[p->y][p->x] = '0';
+			shared->map[p->y][p->x] = EMPTY_TILE;
 		}
 	}
 }
@@ -74,7 +74,7 @@ void setIsAlive()
 void manageDeath()
 {
 	t_player *p = &shared->players[playerId];
-	shared->map[p->y][p->x] = '0';
+	shared->map[p->y][p->x] = EMPTY_TILE;
 	p->isAlive = 0;
 }
 
