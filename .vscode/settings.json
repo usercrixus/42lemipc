@@ -1,0 +1,14 @@
+{
+    "files.associations": {
+        "unistd.h": "c",
+        "ft_printf.h": "c",
+        "termios.h": "c",
+        "player.h": "c",
+        "main.h": "c",
+        "map": "c",
+        "format": "c",
+        "__tree": "c",
+        "errno.h": "c",
+        "shm.h": "c"
+    }
+}
