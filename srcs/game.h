@@ -6,5 +6,6 @@
 #include <stdbool.h>
 
 void drawMap();
-void manageDeath();
+void manageDeath(t_player *p);
 void move(t_move move);
+int isAlive(t_player *p);

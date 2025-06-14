@@ -1,6 +1,6 @@
 #include "game.h"
 
-static int count_cardinal_threats(t_player *p)
+static int countCardinalThreats(t_player *p)
 {
 	int count = 0;
 
@@ -27,7 +27,7 @@ static int count_cardinal_threats(t_player *p)
 	return count;
 }
 
-static int count_diagonal_threats(t_player *p)
+static int countDiagonalThreats(t_player *p)
 {
 	int count = 0;
 
@@ -54,28 +54,25 @@ static int count_diagonal_threats(t_player *p)
 	return count;
 }
 
-void setIsAlive()
+int isAlive(t_player *p)
 {
-	for (size_t i = 0; i < shared->numberOfPlayer; i++)
-	{
-		t_player *p = &shared->players[i];
-		if (!p->isAlive)
-			continue;
-
-		int surrounded = count_cardinal_threats(p) + count_diagonal_threats(p);
-		if (surrounded >= 2)
-		{
-			p->isAlive = false;
-			shared->map[p->y][p->x] = EMPTY_TILE;
-		}
-	}
+	return (countCardinalThreats(p) + countDiagonalThreats(p) < 2);
 }
 
-void manageDeath()
+void manageDeath(t_player *p)
 {
-	t_player *p = &shared->players[playerId];
 	shared->map[p->y][p->x] = EMPTY_TILE;
 	p->isAlive = 0;
+}
+
+void setIsAlive()
+{
+	for (size_t i = 0; i < MAX_PLAYER; i++)
+	{
+		t_player *p = &shared->players[i];
+		if (p->pid != -1 && !isAlive(p))
+			manageDeath(p);
+	}
 }
 
 static void effectiveMove(int dx, int dy)
@@ -97,19 +94,25 @@ static void effectiveMove(int dx, int dy)
 
 void move(t_move move)
 {
-	pthread_mutex_lock(&shared->mut);
-	if (move == TOP)
-		effectiveMove(0, -1);
-	else if (move == BOT)
-		effectiveMove(0, 1);
-	else if (move == LEFT)
-		effectiveMove(-1, 0);
-	else if (move == RIGHT)
-		effectiveMove(1, 0);
-	setIsAlive();
-	pthread_mutex_unlock(&shared->mut);
-	for (int i = 0; i < shared->nextPlayerId; i++)
-			kill(shared->players[i].pid, SIGUSR1);
+	pthread_mutex_lock(&shared->mutexGame);
+	if (shared->players[playerId].isAlive)
+	{
+		if (move == TOP)
+			effectiveMove(0, -1);
+		else if (move == BOT)
+			effectiveMove(0, 1);
+		else if (move == LEFT)
+			effectiveMove(-1, 0);
+		else if (move == RIGHT)
+			effectiveMove(1, 0);
+		setIsAlive();
+		for (int i = 0; i < MAX_PLAYER; i++)
+		{
+			if (shared->players[i].pid != -1)
+				kill(shared->players[i].pid, SIGUSR1);
+		}
+	}
+	pthread_mutex_unlock(&shared->mutexGame);
 }
 
 void drawMap()

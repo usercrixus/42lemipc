@@ -35,7 +35,8 @@ typedef struct s_shared
 	t_player players[MAX_PLAYER];
 	int numberOfPlayer;
 	int shmid;
-	pthread_mutex_t mut;
+	int isKilled;
+	pthread_mutex_t mutexGame;
 } t_shared;
 
 extern t_shared *shared;
