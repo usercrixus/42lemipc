@@ -22,4 +22,5 @@ void manageDeath(t_player *p);
 void move(t_move move);
 int isAlive(t_player *p);
 void setIsAlive();
+bool isGameEnd();
 t_move getBestMove();
