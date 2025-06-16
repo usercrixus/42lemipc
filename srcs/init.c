@@ -1,22 +1,6 @@
 #include "init.h"
 #include <errno.h>
 
-static void setInputMode(bool enable)
-{
-	static struct termios oldt;
-	static struct termios newt;
-
-	if (enable)
-	{
-		tcgetattr(STDIN_FILENO, &oldt);
-		newt = oldt;
-		newt.c_lflag &= ~(ICANON | ECHO);
-		tcsetattr(STDIN_FILENO, TCSANOW, &newt);
-	}
-	else
-		tcsetattr(STDIN_FILENO, TCSANOW, &oldt);
-}
-
 static void manageSignal(int signo)
 {
 	if (signo == SIGUSR1)
@@ -27,46 +11,32 @@ static void manageSignal(int signo)
 			shared->players[playerId].pid = -1;
 			--(shared->numberOfPlayer);
 			pthread_mutex_unlock(&shared->mutexGame);
-			setInputMode(false);
 			exit(0);
 		}
 	}
 	else if (signo == SIGINT)
-		ft_printf("Use q to quit\n");
+	{
+		manageDeath(&shared->players[playerId]);
+		shared->players[playerId].pid = -1;
+		--(shared->numberOfPlayer);
+		if (shared->numberOfPlayer == 0 && !shared->isKilled)
+		{
+			shared->isKilled = 1;
+			shmctl(shared->shmid, IPC_RMID, NULL);
+		}
+		exit(0);
+	}
 }
 
-static void handleInput()
+static void handleMove()
 {
-	char seq[3];
-
-	seq[0] = 0;
-	while (seq[0] != 'q' && shared->players[playerId].isAlive)
+	while (shared->players[playerId].isAlive)
 	{
-		read(STDIN_FILENO, &seq[0], 1);
-		if (seq[0] == 27)
-		{
-			read(STDIN_FILENO, &seq[1], 1);
-			if (seq[1] == '[')
-			{
-				read(STDIN_FILENO, &seq[2], 1);
-				if (seq[2] == 'A')
-					move(TOP);
-				else if (seq[2] == 'B')
-					move(BOT);
-				else if (seq[2] == 'C')
-					move(RIGHT);
-				else if (seq[2] == 'D')
-					move(LEFT);
-			}
-		}
-		else if (seq[0] == 'q')
-		{
-			pthread_mutex_lock(&shared->mutexGame);
-			manageDeath(&shared->players[playerId]);
-			shared->players[playerId].pid = -1;
-			--(shared->numberOfPlayer);
-			pthread_mutex_unlock(&shared->mutexGame);
-		}
+		pthread_mutex_lock(&shared->mutexGame);
+		t_move bestMove = getBestMove();
+		move(bestMove);
+		pthread_mutex_unlock(&shared->mutexGame);
+		sleep(1);
 	}
 }
 
@@ -147,7 +117,7 @@ static bool shmCreation(int key, int shm_id)
 
 static bool initSharedMemory()
 {
-	key_t key = ftok(".gitmodules", 42);
+	key_t key = ftok(".gitmodules", 110);
 	if (key == -1)
 	{
 		perror("ftok");
@@ -175,13 +145,12 @@ bool launchGame(char team)
 		initMap();
 	if (!initPlayer(team))
 		return (false);
-	setInputMode(true);
 	for (int i = 0; i < MAX_PLAYER; i++)
 	{
 		if (shared->players[i].pid != -1)
 			kill(shared->players[i].pid, SIGUSR1);
 	}
-	handleInput();
+	handleMove();
 	pthread_mutex_lock(&shared->mutexGame);
 	if (shared->numberOfPlayer == 0 && !shared->isKilled)
 	{
@@ -189,6 +158,5 @@ bool launchGame(char team)
 		shmctl(shared->shmid, IPC_RMID, NULL);
 	}
 	pthread_mutex_unlock(&shared->mutexGame);
-	setInputMode(false);
 	return (true);
 }

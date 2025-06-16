@@ -3,6 +3,11 @@ OBJ = \
 	srcs/init.o \
 	srcs/main.o \
 
+all: submodule main.out
+
+submodule:
+	git submodule update --init --recursive
+
 main.out: $(OBJ)
 	make -C srcs/42libft/
 	gcc -Wall -Wextra -Werror $^ -Lsrcs/42libft/ft_printf/ -lftprintf -o $@

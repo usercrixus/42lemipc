@@ -94,7 +94,6 @@ static void effectiveMove(int dx, int dy)
 
 void move(t_move move)
 {
-	pthread_mutex_lock(&shared->mutexGame);
 	if (shared->players[playerId].isAlive)
 	{
 		if (move == TOP)
@@ -112,7 +111,6 @@ void move(t_move move)
 				kill(shared->players[i].pid, SIGUSR1);
 		}
 	}
-	pthread_mutex_unlock(&shared->mutexGame);
 }
 
 void drawMap()
@@ -126,4 +124,47 @@ void drawMap()
 		ft_printf("\n");
 	}
 	ft_printf("\n");
+}
+
+t_move getBestMove()
+{
+	t_player *self = &shared->players[playerId];
+	int minThreats = 100;
+	t_move bestMove = STAY;
+
+	// Possible directions and their (dx, dy)
+	const struct { t_move dir; int dx; int dy; } directions[] = {
+		{TOP, 0, -1},
+		{RIGHT, 1, 0},
+		{BOT, 0, 1},
+		{LEFT, -1, 0}
+	};
+
+	for (int i = 0; i < 4; i++)
+	{
+		int new_x = self->x + directions[i].dx;
+		int new_y = self->y + directions[i].dy;
+
+		// Skip out-of-bounds or occupied tiles
+		if (new_x < 0 || new_x >= MAP_WIDTH || new_y < 0 || new_y >= MAP_HEIGHT)
+			continue;
+		if (shared->map[new_y][new_x] != EMPTY_TILE)
+			continue;
+
+		// Simulate move
+		t_player tmp = *self;
+		tmp.x = new_x;
+		tmp.y = new_y;
+
+		int threat = countCardinalThreats(&tmp) + countDiagonalThreats(&tmp);
+
+		if (threat < minThreats)
+		{
+			minThreats = threat;
+			bestMove = directions[i].dir;
+		}
+	}
+
+	// If no better move found, stay in place
+	return bestMove;
 }

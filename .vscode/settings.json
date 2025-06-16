@@ -1,4 +1,7 @@
 {
+    "files.exclude": {
+        "**/*.o": true
+    },
     "files.associations": {
         "unistd.h": "c",
         "ft_printf.h": "c",

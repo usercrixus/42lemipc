@@ -15,7 +15,8 @@ typedef enum e_move
 	TOP,
 	BOT,
 	LEFT,
-	RIGHT
+	RIGHT,
+	STAY
 } t_move;
 
 typedef struct s_player
