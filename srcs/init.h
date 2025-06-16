@@ -7,5 +7,6 @@
 #include <sys/shm.h>
 #include <stdbool.h>
 #include <pthread.h>
+#include <semaphore.h>
 
 bool launchGame(char team);

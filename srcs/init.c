@@ -19,6 +19,11 @@ static void manageSignal(int signo)
 		manageDeath(&shared->players[playerId]);
 		shared->players[playerId].pid = -1;
 		--(shared->numberOfPlayer);
+		for (int i = 0; i < MAX_PLAYER; i++)
+		{
+			if (shared->players[i].pid != -1)
+				kill(shared->players[i].pid, SIGUSR1);
+		}
 		if (shared->numberOfPlayer == 0 && !shared->isKilled)
 		{
 			shared->isKilled = 1;
@@ -33,8 +38,24 @@ static void handleMove()
 	while (shared->players[playerId].isAlive)
 	{
 		pthread_mutex_lock(&shared->mutexGame);
+
+		// 1) Re-evaluate survival based on current map
+		setIsAlive();
+		if (!shared->players[playerId].isAlive)
+		{
+			// clean up and exit
+			manageDeath(&shared->players[playerId]);
+			pthread_mutex_unlock(&shared->mutexGame);
+			exit(0);
+		}
+
+		// 2) Compute and execute aggressive move
 		t_move bestMove = getBestMove();
 		move(bestMove);
+
+		// 3) Check again after moving
+		setIsAlive();
+
 		pthread_mutex_unlock(&shared->mutexGame);
 		sleep(1);
 	}
@@ -117,7 +138,7 @@ static bool shmCreation(int key, int shm_id)
 
 static bool initSharedMemory()
 {
-	key_t key = ftok(".gitmodules", 110);
+	key_t key = ftok(".gitmodules", 130);
 	if (key == -1)
 	{
 		perror("ftok");
@@ -154,6 +175,9 @@ bool launchGame(char team)
 	pthread_mutex_lock(&shared->mutexGame);
 	if (shared->numberOfPlayer == 0 && !shared->isKilled)
 	{
+		int msgid = msgget(MSGQ_KEY, 0666);
+		if (msgid >= 0)
+			msgctl(msgid, IPC_RMID, NULL);
 		shared->isKilled = 1;
 		shmctl(shared->shmid, IPC_RMID, NULL);
 	}
