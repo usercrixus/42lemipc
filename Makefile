@@ -1,7 +1,11 @@
 OBJ = \
+	srcs/ai.o \
 	srcs/game.o \
-	srcs/init.o \
+	srcs/initDisplayer.o \
+	srcs/initPlayer.o \
 	srcs/main.o \
+	srcs/move.o \
+	srcs/sharedMemory.o
 
 all: submodule main.out
 
@@ -10,10 +14,10 @@ submodule:
 
 main.out: $(OBJ)
 	make -C srcs/42libft/
-	gcc -Wall -Wextra -Werror $^ -Lsrcs/42libft/ft_printf/ -lftprintf -o $@
+	gcc -Wall -Wextra -Werror Isrcs/include $^ -Lsrcs/42libft/ft_printf/ -lftprintf -o $@
 
 %.o: %c
-	gcc -Wall -Wextra -Werror -c $^ -o $@
+	gcc -Wall -Wextra -Werror Isrcs/include -c $^ -o $@
 
 clean:
 	rm -f $(OBJ)
