@@ -2,6 +2,7 @@
 
 #include <sys/types.h>
 #include <pthread.h>
+#include <stdbool.h>
 
 #define MAP_HEIGHT 10
 #define MAP_WIDTH 30
@@ -9,6 +10,8 @@
 #define TEAM_1_TILE '1'
 #define TEAM_2_TILE '2'
 #define MAX_PLAYER 10
+#define MSGQ_KEY 4242
+#define MSG_TYPE_TARGET 1
 
 typedef enum e_move
 {
@@ -25,8 +28,6 @@ typedef struct s_player
 	int y;
 	char symbole;
 	int playerId;
-	pid_t pid;
-	int isAlive;
 } t_player;
 
 typedef struct s_shared
@@ -34,11 +35,18 @@ typedef struct s_shared
 	int nextPlayerId;
 	int map[MAP_HEIGHT][MAP_WIDTH];
 	t_player players[MAX_PLAYER];
-	int numberOfPlayer;
-	int shmid;
-	int isKilled;
+	int sharedMemoryId;
+	bool isGameStarted;
+	pid_t displayPid;
 	pthread_mutex_t mutexGame;
 } t_shared;
+
+typedef struct s_msg_target {
+    long mtype;
+    int targetX;
+    int targetY;
+    char team;
+} t_msg_target;
 
 extern t_shared *shared;
 extern int playerId;

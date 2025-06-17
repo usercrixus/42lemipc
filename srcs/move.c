@@ -19,20 +19,12 @@ static void effectiveMove(int dx, int dy)
 
 void move(t_move move)
 {
-	if (shared->players[playerId].isAlive)
-	{
-		if (move == TOP)
-			effectiveMove(0, -1);
-		else if (move == BOT)
-			effectiveMove(0, 1);
-		else if (move == LEFT)
-			effectiveMove(-1, 0);
-		else if (move == RIGHT)
-			effectiveMove(1, 0);
-		for (int i = 0; i < MAX_PLAYER; i++)
-		{
-			if (shared->players[i].pid != -1)
-				kill(shared->players[i].pid, SIGUSR1);
-		}
-	}
+	if (move == TOP)
+		effectiveMove(0, -1);
+	else if (move == BOT)
+		effectiveMove(0, 1);
+	else if (move == LEFT)
+		effectiveMove(-1, 0);
+	else if (move == RIGHT)
+		effectiveMove(1, 0);
 }

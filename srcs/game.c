@@ -59,31 +59,23 @@ int isAlive(t_player *p)
 	return (countCardinalThreats(p) + countDiagonalThreats(p) < 2);
 }
 
-void manageDeath(t_player *p)
+bool isGameEnd()
 {
-	shared->map[p->y][p->x] = EMPTY_TILE;
-	p->isAlive = 0;
-}
+	char team;
 
-void setIsAlive()
-{
-	for (size_t i = 0; i < MAX_PLAYER; i++)
-	{
-		t_player *p = &shared->players[i];
-		if (p->pid != -1 && !isAlive(p))
-			manageDeath(p);
-	}
-}
-
-void drawMap()
-{
+	team = '0';
 	for (size_t y = 0; y < MAP_HEIGHT; y++)
 	{
 		for (size_t x = 0; x < MAP_WIDTH; x++)
 		{
-			ft_printf(" %c ", shared->map[y][x]);
+			if (shared->map[y][x] != team)
+			{
+				if (team == '0')
+					team = shared->map[y][x];
+				else
+					return (true);
+			}
 		}
-		ft_printf("\n");
 	}
-	ft_printf("\n");
+	return (false);
 }

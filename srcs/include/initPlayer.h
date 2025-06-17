@@ -2,4 +2,4 @@
 
 #include <stdbool.h>
 
-bool initSharedMemory();
+bool launchPlayer(char team);

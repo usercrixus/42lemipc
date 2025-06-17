@@ -1,5 +1,17 @@
 #include "sharedMemory.h"
 #include "main.h"
+#include <sys/ipc.h>
+#include <errno.h>
+#include <sys/msg.h>
+
+static void initMap()
+{
+	for (size_t y = 0; y < MAP_HEIGHT; y++)
+	{
+		for (size_t x = 0; x < MAP_WIDTH; x++)
+			shared->map[y][x] = EMPTY_TILE;
+	}
+}
 
 static bool shmAlreadyExist(int key)
 {
@@ -9,7 +21,7 @@ static bool shmAlreadyExist(int key)
 	shared = shmat(shm_id, NULL, 0);
 	if (shared == (void *)-1)
 		return (perror("shmat"), false);
-	if (shared->isKilled)
+	if (shared->isGameStarted)
 		return (ft_printf("The game is over, you can try to create a new one"), false);
 	return (true);
 }
@@ -19,12 +31,10 @@ static bool shmCreation(int key, int shm_id)
 	shared = shmat(shm_id, NULL, 0);
 	if (shared == (void *)-1)
 		return (perror("shmat"), false);
-	shared->shmid = shm_id;
+	shared->sharedMemoryId = shm_id;
 	shared->nextPlayerId = 0;
-	shared->numberOfPlayer = 0;
-	shared->isKilled = 0;
-	for (int i = 0; i < MAX_PLAYER; i++)
-		shared->players[i].pid = -1;
+	shared->isGameStarted = false;
+	initMap();
 	pthread_mutex_init(&shared->mutexGame, 0);
 	return (true);
 }
@@ -47,4 +57,17 @@ bool initSharedMemory()
 	}
 	else
 		return (shmCreation(key, shm_id));
+}
+
+void destroySharedMemory()
+{
+	shmctl(shared->sharedMemoryId, IPC_RMID, NULL);
+}
+
+void destroyMSGQueue()
+{
+	int msgid = msgget(MSGQ_KEY, 0666);
+	if (msgid >= 0)
+		msgctl(msgid, IPC_RMID, NULL);
+	shared->isGameStarted = 1;
 }
