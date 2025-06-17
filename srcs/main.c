@@ -9,6 +9,7 @@ int playerId;
 
 int main(int argc, char const *argv[])
 {
+	srand(42);
 	if (argc == 1)
 	{
 		if (!launchDisplayer())

@@ -9,21 +9,22 @@
 static void handleMove()
 {
 	t_player p = shared->players[playerId];
-	bool isDead = false;
-	while (!isDead && !isGameEnd())
+	while (true)
 	{
 		pthread_mutex_lock(&shared->mutexGame);
+		if (isGameEnd())
+			break;
 		if (!isAlive(&p))
 		{
 			shared->map[p.y][p.x] = EMPTY_TILE;
-			isDead = true;
+			break;
 		}
 		t_move bestMove = getBestMove();
 		move(bestMove);
 		if (!isAlive(&p))
 		{
 			shared->map[p.y][p.x] = EMPTY_TILE;
-			isDead = true;
+			break;
 		}
 		pthread_mutex_unlock(&shared->mutexGame);
 	}
@@ -31,17 +32,21 @@ static void handleMove()
 
 static int initPlayerPosition(t_player *p)
 {
-	for (int i = 0; i < MAP_HEIGHT; i++)
+	int startY = rand() % MAP_HEIGHT;
+	int startX = rand() % MAP_WIDTH;
+
+	for (int offset = 0; offset < MAP_HEIGHT * MAP_WIDTH; offset++)
 	{
-		for (int j = 0; j < MAP_WIDTH; j++)
+		int index = (startY * MAP_WIDTH + startX + offset) % (MAP_HEIGHT * MAP_WIDTH);
+		int y = index / MAP_WIDTH;
+		int x = index % MAP_WIDTH;
+
+		if (shared->map[y][x] == EMPTY_TILE)
 		{
-			if (shared->map[i][j] == EMPTY_TILE)
-			{
-				p->x = j;
-				p->y = i;
-				if (isAlive(p))
-					return (true);
-			}
+			p->x = x;
+			p->y = y;
+			if (isAlive(p))
+				return (true);
 		}
 	}
 	return (false);
