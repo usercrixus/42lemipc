@@ -3,6 +3,9 @@
 #include <sys/ipc.h>
 #include <errno.h>
 #include <sys/msg.h>
+#include <sys/shm.h>
+#include <stdio.h>
+#include "42libft/ft_printf/ft_printf.h"
 
 static void initMap()
 {
@@ -26,7 +29,7 @@ static bool shmAlreadyExist(int key)
 	return (true);
 }
 
-static bool shmCreation(int key, int shm_id)
+static bool shmCreation(int shm_id)
 {
 	shared = shmat(shm_id, NULL, 0);
 	if (shared == (void *)-1)
@@ -43,10 +46,7 @@ bool initSharedMemory()
 {
 	key_t key = ftok(".gitmodules", 130);
 	if (key == -1)
-	{
-		perror("ftok");
-		exit(1);
-	}
+		return (perror("ftok"), false);
 	int shm_id = shmget(key, sizeof(t_shared), IPC_CREAT | IPC_EXCL | 0666);
 	if (shm_id == -1)
 	{
@@ -56,7 +56,7 @@ bool initSharedMemory()
 			return (perror("shmget"), false);
 	}
 	else
-		return (shmCreation(key, shm_id));
+		return (shmCreation(shm_id));
 }
 
 void destroySharedMemory()

@@ -1,6 +1,8 @@
 #include "initDisplayer.h"
 #include "sharedMemory.h"
 #include "main.h"
+#include "42libft/ft_printf/ft_printf.h"
+#include <unistd.h>
 
 static void drawMap()
 {
@@ -22,4 +24,5 @@ bool launchDisplayer()
 	shared->displayPid = getpid();
 	shared->isGameStarted = true;
 	drawMap();
+	return (true);
 }

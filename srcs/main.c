@@ -1,5 +1,6 @@
 #include "initPlayer.h"
 #include "initDisplayer.h"
+#include "main.h"
 #include "42libft/ft_base/libft.h"
 #include "42libft/ft_printf/ft_printf.h"
 
