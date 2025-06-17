@@ -21,8 +21,10 @@ bool launchDisplayer()
 {
 	if (!initSharedMemory())
 		return (false);
-	shared->displayPid = getpid();
+	shared->displayerPid = getpid();
 	shared->isGameStarted = true;
 	drawMap();
+	destroySharedMemory();
+	destroyMSGQueue();
 	return (true);
 }

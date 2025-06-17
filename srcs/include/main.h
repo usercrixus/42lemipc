@@ -37,7 +37,7 @@ typedef struct s_shared
 	t_player players[MAX_PLAYER];
 	int sharedMemoryId;
 	bool isGameStarted;
-	pid_t displayPid;
+	pid_t displayerPid;
 	pthread_mutex_t mutexGame;
 } t_shared;
 

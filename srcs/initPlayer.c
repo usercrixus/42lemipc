@@ -2,6 +2,8 @@
 #include "main.h"
 #include "game.h"
 #include "sharedMemory.h"
+#include "move.h"
+#include "ai.h"
 #include "42libft/ft_printf/ft_printf.h"
 
 static void handleMove()
