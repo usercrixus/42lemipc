@@ -38,7 +38,8 @@ static bool shmCreation(int shm_id)
 	shared->nextPlayerId = 0;
 	shared->isGameStarted = false;
 	initMap();
-	pthread_mutex_init(&shared->mutexGame, 0);
+	sem_init(&shared->semGame, 1, 0);
+	sem_init(&shared->semInit, 1, 1);
 	return (true);
 }
 

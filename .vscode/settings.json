@@ -13,6 +13,7 @@
         "__tree": "c",
         "errno.h": "c",
         "shm.h": "c",
-        "pthread.h": "c"
+        "pthread.h": "c",
+        "semaphore.h": "c"
     }
 }

@@ -3,6 +3,7 @@
 #include "main.h"
 #include "42libft/ft_printf/ft_printf.h"
 #include <unistd.h>
+#include <signal.h>
 
 static void drawMap()
 {
@@ -21,9 +22,12 @@ bool launchDisplayer()
 {
 	if (!initSharedMemory())
 		return (false);
+	sem_wait(&shared->semInit);
 	shared->displayerPid = getpid();
 	shared->isGameStarted = true;
-	drawMap();
+	signal(SIGUSR1, drawMap);
+	sem_post(&shared->semInit);
+	sem_post(&shared->semGame); // unblock the game
 	destroySharedMemory();
 	destroyMSGQueue();
 	return (true);

@@ -5,18 +5,26 @@
 #include "move.h"
 #include "ai.h"
 #include "42libft/ft_printf/ft_printf.h"
+#include <signal.h>
+#include <unistd.h>
 
 static void handleMove()
 {
 	t_player p = shared->players[playerId];
 	while (true)
 	{
-		pthread_mutex_lock(&shared->mutexGame);
+		sem_wait(&shared->semGame);
 		if (isGameEnd())
+		{
+			sem_post(&shared->semGame);
 			break;
+		}
+		sleep(1);
 		if (!isAlive(&p))
 		{
 			shared->map[p.y][p.x] = EMPTY_TILE;
+			kill(shared->displayerPid, SIGUSR1);
+			sem_post(&shared->semGame);
 			break;
 		}
 		t_move bestMove = getBestMove();
@@ -24,9 +32,12 @@ static void handleMove()
 		if (!isAlive(&p))
 		{
 			shared->map[p.y][p.x] = EMPTY_TILE;
+			kill(shared->displayerPid, SIGUSR1);
+			sem_post(&shared->semGame);
 			break;
 		}
-		pthread_mutex_unlock(&shared->mutexGame);
+		kill(shared->displayerPid, SIGUSR1);
+		sem_post(&shared->semGame);
 	}
 }
 
@@ -54,18 +65,18 @@ static int initPlayerPosition(t_player *p)
 
 static int initPlayer(char team)
 {
-	pthread_mutex_lock(&shared->mutexGame);
+	sem_wait(&shared->semInit);
 	if (shared->nextPlayerId == MAX_PLAYER)
-		return (pthread_mutex_unlock(&shared->mutexGame), ft_printf("Max number of player reached"), 0);
+		return (sem_post(&shared->semInit), ft_printf("Max number of player reached"), 0);
 	t_player *p = &shared->players[shared->nextPlayerId];
 	if (!initPlayerPosition(p))
-		return (pthread_mutex_unlock(&shared->mutexGame), ft_printf("Can't find a valid position for the player"), 0);
+		return (sem_post(&shared->semInit), ft_printf("Can't find a valid position for the player"), 0);
 	shared->map[p->y][p->x] = p->symbole;
 	p->playerId = shared->nextPlayerId;
 	playerId = p->playerId;
 	p->symbole = team;
 	shared->nextPlayerId++;
-	pthread_mutex_unlock(&shared->mutexGame);
+	sem_post(&shared->semInit);
 	return (1);
 }
 

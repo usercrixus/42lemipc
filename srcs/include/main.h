@@ -3,6 +3,7 @@
 #include <sys/types.h>
 #include <pthread.h>
 #include <stdbool.h>
+#include <semaphore.h>
 
 #define MAP_HEIGHT 10
 #define MAP_WIDTH 30
@@ -38,14 +39,16 @@ typedef struct s_shared
 	int sharedMemoryId;
 	bool isGameStarted;
 	pid_t displayerPid;
-	pthread_mutex_t mutexGame;
+	sem_t semGame;
+	sem_t semInit;
 } t_shared;
 
-typedef struct s_msg_target {
-    long mtype;
-    int targetX;
-    int targetY;
-    char team;
+typedef struct s_msg_target
+{
+	long mtype;
+	int targetX;
+	int targetY;
+	char team;
 } t_msg_target;
 
 extern t_shared *shared;
