@@ -24,6 +24,10 @@ static bool shmAlreadyExist(int key)
 	shared = shmat(shm_id, NULL, 0);
 	if (shared == (void *)-1)
 		return (perror("shmat"), false);
+	while (!(shared->isSegmentInitialized))
+	{
+		// spinlock
+	}
 	if (shared->isGameStarted)
 		return (ft_printf("The game is over, you can try to create a new one"), false);
 	return (true);
@@ -40,6 +44,7 @@ static bool shmCreation(int shm_id)
 	initMap();
 	sem_init(&shared->semGame, 1, 0);
 	sem_init(&shared->semInit, 1, 1);
+	shared->isSegmentInitialized = true;
 	return (true);
 }
 

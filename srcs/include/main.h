@@ -1,7 +1,6 @@
 #pragma once
 
 #include <sys/types.h>
-#include <pthread.h>
 #include <stdbool.h>
 #include <semaphore.h>
 
@@ -41,6 +40,7 @@ typedef struct s_shared
 	pid_t displayerPid;
 	sem_t semGame;
 	sem_t semInit;
+	bool isSegmentInitialized;
 } t_shared;
 
 typedef struct s_msg_target
