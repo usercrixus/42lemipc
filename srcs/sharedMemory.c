@@ -28,8 +28,6 @@ static bool shmAlreadyExist(int key)
 	{
 		// spinlock
 	}
-	if (shared->isGameStarted)
-		return (ft_printf("The game is over, you can try to create a new one"), false);
 	return (true);
 }
 
