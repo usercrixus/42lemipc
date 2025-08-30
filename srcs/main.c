@@ -3,13 +3,15 @@
 #include "main.h"
 #include "42libft/ft_base/libft.h"
 #include "42libft/ft_printf/ft_printf.h"
+#include <time.h>
+#include <unistd.h>
 
 t_shared *shared;
 int playerId;
 
 int main(int argc, char const *argv[])
 {
-	srand(42);
+	srand((unsigned)(getpid() ^ time(NULL)));
 	if (argc == 1)
 	{
 		if (!launchDisplayer())

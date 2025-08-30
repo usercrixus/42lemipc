@@ -1,0 +1,87 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+DIR="$(cd "$(dirname "$0")" && pwd)"
+cd "$DIR"
+
+usage() {
+  echo "Usage: $0 <team_count> <players_per_team>" >&2
+  echo "Starts T teams with N players each, then the displayer." >&2
+}
+
+if [[ ${1:-} =~ ^-h|--help$ ]]; then
+  usage
+  exit 0
+fi
+
+if [[ $# -ne 2 ]]; then
+  usage
+  exit 1
+fi
+
+if ! [[ $1 =~ ^[0-9]+$ ]]; then
+  echo "Error: team_count must be an integer" >&2
+  exit 1
+fi
+if ! [[ $2 =~ ^[0-9]+$ ]]; then
+  echo "Error: players_per_team must be an integer" >&2
+  exit 1
+fi
+
+TEAM_COUNT="$1"
+PLAYERS_PER_TEAM="$2"
+
+# Allowed team symbols: 1-9 then A-Z (no 0)
+SYMS=(1 2 3 4 5 6 7 8 9 A B C D E F G H I J K L M N O P Q R S T U V W X Y Z)
+MAX_TEAMS=${#SYMS[@]}
+if (( TEAM_COUNT > MAX_TEAMS )); then
+  echo "Warning: capping team count to $MAX_TEAMS (available symbols)" >&2
+  TEAM_COUNT=$MAX_TEAMS
+fi
+
+# Discover MAX_PLAYER from headers (total capacity across all teams)
+# Supports either a numeric value or a macro expression; defaults to 500 if not numeric
+MAX_LINE=$(awk '/^#define[ \t]+MAX_PLAYER[ \t]+/{print; exit}' srcs/include/main.h 2>/dev/null || true)
+if [[ "$MAX_LINE" =~ ^#define[[:space:]]+MAX_PLAYER[[:space:]]+([0-9]+)$ ]]; then
+  MAX_TOTAL="${BASH_REMATCH[1]}"
+else
+  MAX_TOTAL="500"
+fi
+
+# Cap per-team count so that total does not exceed MAX_TOTAL
+MAX_PER_TEAM=$(( MAX_TOTAL / TEAM_COUNT ))
+if (( PLAYERS_PER_TEAM > MAX_PER_TEAM )); then
+  echo "Warning: capping players per team to $MAX_PER_TEAM (MAX_PLAYER=$MAX_TOTAL, teams=$TEAM_COUNT)" >&2
+  PLAYERS_PER_TEAM=$MAX_PER_TEAM
+fi
+
+# Build if needed
+if [[ ! -x ./main.out ]]; then
+  echo "Building project..."
+  make
+fi
+
+declare -a PIDS=()
+cleanup() {
+  # Try to gracefully terminate any remaining background players
+  if (( ${#PIDS[@]} > 0 )); then
+    kill ${PIDS[@]} 2>/dev/null || true
+  fi
+}
+trap cleanup EXIT INT TERM
+
+TOTAL=$(( PLAYERS_PER_TEAM * TEAM_COUNT ))
+echo "Starting $PLAYERS_PER_TEAM players per team across $TEAM_COUNT teams (total $TOTAL)..."
+for (( i=0; i<PLAYERS_PER_TEAM; i++ )); do
+  for (( t=0; t<TEAM_COUNT; t++ )); do
+    sym=${SYMS[$t]}
+    ./main.out "$sym" >/dev/null 2>&1 & PIDS+=($!)
+  done
+  # Small delay to let players initialize positions
+  usleep 50000 2>/dev/null || sleep 0.05
+done
+
+echo "Launching displayer..."
+./main.out
+
+echo "Game finished."

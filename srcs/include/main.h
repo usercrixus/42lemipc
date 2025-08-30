@@ -4,12 +4,13 @@
 #include <stdbool.h>
 #include <semaphore.h>
 
-#define MAP_HEIGHT 10
-#define MAP_WIDTH 30
+// Fixed grid size (3:1 proportion)
+#define MAX_MAP_HEIGHT 10
+#define MAX_MAP_WIDTH 30
 #define EMPTY_TILE '0'
 #define TEAM_1_TILE '1'
 #define TEAM_2_TILE '2'
-#define MAX_PLAYER 10
+#define MAX_PLAYER (MAX_MAP_HEIGHT * MAX_MAP_WIDTH / 2)
 #define MSGQ_KEY 4242
 #define MSG_TYPE_TARGET 1
 
@@ -32,13 +33,14 @@ typedef struct s_player
 
 typedef struct s_shared
 {
-	int nextPlayerId;
-	int map[MAP_HEIGHT][MAP_WIDTH];
-	t_player players[MAX_PLAYER];
-	int sharedMemoryId;
-	bool isGameStarted;
-	pid_t displayerPid;
-	sem_t semGame;
+    int nextPlayerId;
+	int playersAlive;
+    int map[MAX_MAP_HEIGHT][MAX_MAP_WIDTH];
+    t_player players[MAX_PLAYER];
+    int sharedMemoryId;
+    bool isGameStarted;
+    pid_t displayerPid;
+    sem_t semGame;
 	sem_t semInit;
 	bool isSegmentInitialized;
 } t_shared;

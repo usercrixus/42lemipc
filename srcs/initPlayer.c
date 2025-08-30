@@ -10,57 +10,71 @@
 
 static void handleMove()
 {
-	t_player p = shared->players[playerId];
+	t_player *p = &shared->players[playerId];
 	while (true)
 	{
 		sem_wait(&shared->semGame);
 		if (isGameEnd())
 		{
+			kill(shared->displayerPid, SIGUSR1);
 			sem_post(&shared->semGame);
 			break;
 		}
-		sleep(1);
-		if (!isAlive(&p))
+		usleep(1000*1000*0.25);
+		if (!isAlive(p))
 		{
-			shared->map[p.y][p.x] = EMPTY_TILE;
+			shared->map[p->y][p->x] = EMPTY_TILE;
 			kill(shared->displayerPid, SIGUSR1);
 			sem_post(&shared->semGame);
 			break;
 		}
 		t_move bestMove = getBestMove();
 		move(bestMove);
-		if (!isAlive(&p))
+		if (!isAlive(p))
 		{
-			shared->map[p.y][p.x] = EMPTY_TILE;
 			kill(shared->displayerPid, SIGUSR1);
 			sem_post(&shared->semGame);
 			break;
 		}
 		kill(shared->displayerPid, SIGUSR1);
 		sem_post(&shared->semGame);
+		usleep(1000*1000*0.25*shared->playersAlive);
 	}
 }
 
 static int initPlayerPosition(t_player *p)
 {
-	int startY = rand() % MAP_HEIGHT;
-	int startX = rand() % MAP_WIDTH;
-
-	for (int offset = 0; offset < MAP_HEIGHT * MAP_WIDTH; offset++)
-	{
-		int index = (startY * MAP_WIDTH + startX + offset) % (MAP_HEIGHT * MAP_WIDTH);
-		int y = index / MAP_WIDTH;
-		int x = index % MAP_WIDTH;
-
-		if (shared->map[y][x] == EMPTY_TILE)
-		{
-			p->x = x;
-			p->y = y;
-			if (isAlive(p))
-				return (true);
-		}
-	}
-	return (false);
+    // Try random empty tiles first for better dispersion
+    int tries = MAX_MAP_HEIGHT * MAX_MAP_WIDTH * 2;
+    for (int t = 0; t < tries; t++)
+    {
+        int y = rand() % MAX_MAP_HEIGHT;
+        int x = rand() % MAX_MAP_WIDTH;
+        if (shared->map[y][x] == EMPTY_TILE)
+        {
+            p->x = x;
+            p->y = y;
+            if (isAlive(p))
+                return (true);
+        }
+    }
+    // Fallback to deterministic scan if random failed (very unlikely)
+    int startY = rand() % MAX_MAP_HEIGHT;
+    int startX = rand() % MAX_MAP_WIDTH;
+    for (int offset = 0; offset < MAX_MAP_HEIGHT * MAX_MAP_WIDTH; offset++)
+    {
+        int index = (startY * MAX_MAP_WIDTH + startX + offset) % (MAX_MAP_HEIGHT * MAX_MAP_WIDTH);
+        int y = index / MAX_MAP_WIDTH;
+        int x = index % MAX_MAP_WIDTH;
+        if (shared->map[y][x] == EMPTY_TILE)
+        {
+            p->x = x;
+            p->y = y;
+            if (isAlive(p))
+                return (true);
+        }
+    }
+    return (false);
 }
 
 static int initPlayer(char team)
@@ -71,12 +85,12 @@ static int initPlayer(char team)
 	if (shared->nextPlayerId == MAX_PLAYER)
 		return (sem_post(&shared->semInit), ft_printf("Max number of player reached"), 0);
 	t_player *p = &shared->players[shared->nextPlayerId];
+	p->symbole = team;
 	if (!initPlayerPosition(p))
 		return (sem_post(&shared->semInit), ft_printf("Can't find a valid position for the player"), 0);
-	shared->map[p->y][p->x] = p->symbole;
 	p->playerId = shared->nextPlayerId;
 	playerId = p->playerId;
-	p->symbole = team;
+	shared->map[p->y][p->x] = p->symbole;
 	shared->nextPlayerId++;
 	sem_post(&shared->semInit);
 	return (1);
