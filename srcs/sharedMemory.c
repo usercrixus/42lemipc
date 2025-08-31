@@ -17,15 +17,6 @@ static void initMap()
 	}
 }
 
-static int is_pid_alive(pid_t pid)
-{
-	if (pid <= 0)
-		return 0;
-	if (kill(pid, 0) == 0)
-		return 1;
-	return (errno == EPERM);
-}
-
 static bool shmCreation(int shm_id)
 {
     shared = shmat(shm_id, NULL, 0);
@@ -66,17 +57,6 @@ static bool shmAlreadyExist(int key)
 	{
 		// spinlock
 	}
-    // If the displayer is not alive anymore, reset the segment so players can join
-    if (shared->isGameStarted && !is_pid_alive(shared->displayerPid))
-    {
-        // Clean message queue and reset shared segment state
-        destroyMSGQueue();
-        shared->nextPlayerId = 0;
-        initMap();
-        sem_init(&shared->semGame, 1, 0);
-        sem_init(&shared->semInit, 1, 1);
-        shared->isGameStarted = false;
-    }
 	return (true);
 }
 

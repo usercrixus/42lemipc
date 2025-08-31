@@ -16,10 +16,11 @@ static void handleMove()
 		sem_wait(&shared->semGame);
 		if (isGameEnd())
 		{
+			shared->playersAlive--;
 			sem_post(&shared->semGame);
 			break;
 		}
-		usleep(1000*1000*0.01);
+		usleep(1000 * 1000 * 0.01);
 		if (!isAlive(p))
 		{
 			shared->map[p->y][p->x] = EMPTY_TILE;
@@ -38,45 +39,50 @@ static void handleMove()
 			sem_post(&shared->semGame);
 			break;
 		}
-		kill(shared->displayerPid, SIGUSR1);
+		int status = kill(shared->displayerPid, SIGUSR1);
+		if (status == -1)
+		{
+			shared->playersAlive--;
+			break;
+		}
 		sem_post(&shared->semGame);
-		usleep(1000*1000*0.01*shared->playersAlive);
+		usleep(1000 * 1000 * 0.01 * shared->playersAlive);
 	}
 }
 
 static int initPlayerPosition(t_player *p)
 {
-    // Try random empty tiles first for better dispersion
-    int tries = MAX_MAP_HEIGHT * MAX_MAP_WIDTH * 2;
-    for (int t = 0; t < tries; t++)
-    {
-        int y = rand() % MAX_MAP_HEIGHT;
-        int x = rand() % MAX_MAP_WIDTH;
-        if (shared->map[y][x] == EMPTY_TILE)
-        {
-            p->x = x;
-            p->y = y;
-            if (isAlive(p))
-                return (true);
-        }
-    }
-    // Fallback to deterministic scan if random failed (very unlikely)
-    int startY = rand() % MAX_MAP_HEIGHT;
-    int startX = rand() % MAX_MAP_WIDTH;
-    for (int offset = 0; offset < MAX_MAP_HEIGHT * MAX_MAP_WIDTH; offset++)
-    {
-        int index = (startY * MAX_MAP_WIDTH + startX + offset) % (MAX_MAP_HEIGHT * MAX_MAP_WIDTH);
-        int y = index / MAX_MAP_WIDTH;
-        int x = index % MAX_MAP_WIDTH;
-        if (shared->map[y][x] == EMPTY_TILE)
-        {
-            p->x = x;
-            p->y = y;
-            if (isAlive(p))
-                return (true);
-        }
-    }
-    return (false);
+	// Try random empty tiles first for better dispersion
+	int tries = MAX_MAP_HEIGHT * MAX_MAP_WIDTH * 2;
+	for (int t = 0; t < tries; t++)
+	{
+		int y = rand() % MAX_MAP_HEIGHT;
+		int x = rand() % MAX_MAP_WIDTH;
+		if (shared->map[y][x] == EMPTY_TILE)
+		{
+			p->x = x;
+			p->y = y;
+			if (isAlive(p))
+				return (true);
+		}
+	}
+	// Fallback to deterministic scan if random failed (very unlikely)
+	int startY = rand() % MAX_MAP_HEIGHT;
+	int startX = rand() % MAX_MAP_WIDTH;
+	for (int offset = 0; offset < MAX_MAP_HEIGHT * MAX_MAP_WIDTH; offset++)
+	{
+		int index = (startY * MAX_MAP_WIDTH + startX + offset) % (MAX_MAP_HEIGHT * MAX_MAP_WIDTH);
+		int y = index / MAX_MAP_WIDTH;
+		int x = index % MAX_MAP_WIDTH;
+		if (shared->map[y][x] == EMPTY_TILE)
+		{
+			p->x = x;
+			p->y = y;
+			if (isAlive(p))
+				return (true);
+		}
+	}
+	return (false);
 }
 
 static int initPlayer(char team)
@@ -98,12 +104,30 @@ static int initPlayer(char team)
 	return (1);
 }
 
+static void quit()
+{
+	shared->playersAlive--;
+	if (shared->playersAlive == 0)
+	{
+		destroySharedMemory();
+		destroyMSGQueue();
+	}
+}
+
 bool launchPlayer(char team)
 {
+	signal(SIGINT, quit);
 	if (!initSharedMemory())
 		return (false);
 	if (!initPlayer(team))
 		return (false);
 	handleMove();
+	sem_wait(&shared->semGame);
+	if (shared->playersAlive == 0)
+	{
+		destroySharedMemory();
+		destroyMSGQueue();
+	}
+	sem_post(&shared->semGame);
 	return (true);
 }

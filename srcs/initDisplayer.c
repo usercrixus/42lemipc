@@ -10,19 +10,19 @@ static volatile sig_atomic_t g_stalemate = 0;
 
 static const char *colorFor(char c)
 {
-	static const char *palette[] = {
-		"\033[31m", "\033[32m", "\033[33m", "\033[34m", "\033[35m", "\033[36m", "\033[91m", "\033[92m", "\033[93m"};
-	size_t n = sizeof(palette) / sizeof(palette[0]);
-	if (c == EMPTY_TILE)
-		return "\033[0m";
-	int idx = 0;
-	if (c >= '1' && c <= '9')
-		idx = c - '1';
-	else if (c >= 'A' && c <= 'Z')
-		idx = c - 'A';
-	else if (c >= 'a' && c <= 'z')
-		idx = c - 'a';
-	return palette[idx % (int)n];
+    static const char *palette[] = {
+        "\033[31m", "\033[32m", "\033[33m", "\033[34m", "\033[35m", "\033[36m", "\033[91m", "\033[92m", "\033[93m"};
+    size_t n = sizeof(palette) / sizeof(palette[0]);
+    if (c == EMPTY_TILE)
+        return "\033[0m";
+    int idx = 0;
+    if (c >= '1' && c <= '9')
+        idx = c - '1';
+    else if (c >= 'A' && c <= 'Z')
+        idx = c - 'A';
+    else if (c >= 'a' && c <= 'z')
+        idx = c - 'a';
+    return palette[idx % (int)n];
 }
 
 static void termGoto(size_t row, size_t col)
@@ -78,13 +78,13 @@ static void drawMap(int sig)
         }
     }
     termGoto(MAX_MAP_HEIGHT + 1, 1);
-	static int stagnant = 0;
-	if (same)
-		stagnant++;
-	else
-		stagnant = 0;
-	if (stagnant > 50)
-		g_stalemate = 1;
+    static int stagnant = 0;
+    if (same)
+        stagnant++;
+    else
+        stagnant = 0;
+    if (stagnant > 50)
+        g_stalemate = 1;
 }
 
 bool launchDisplayer()
@@ -105,7 +105,5 @@ bool launchDisplayer()
         if (isGameEnd() || g_stalemate)
             break;
     }
-    destroyMSGQueue();
-    destroySharedMemory();
     return (true);
 }
