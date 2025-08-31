@@ -25,27 +25,59 @@ static const char *colorFor(char c)
 	return palette[idx % (int)n];
 }
 
+static void termGoto(size_t row, size_t col)
+{
+    ft_printf("\033[%d;%dH", (int)row, (int)col);
+}
+
+static void drawCell(size_t y, size_t x, char c)
+{
+    const char *col = colorFor(c);
+    size_t row = y + 1;
+    size_t start_col = x * 3 + 1;
+    termGoto(row, start_col);
+    ft_printf(" %s%c\033[0m ", col, c);
+}
+
+static void fullDraw(char last[MAX_MAP_HEIGHT][MAX_MAP_WIDTH], int *p_init)
+{
+    ft_printf("\033[2J\033[H");
+    for (size_t y = 0; y < (size_t)MAX_MAP_HEIGHT; y++)
+    {
+        for (size_t x = 0; x < (size_t)MAX_MAP_WIDTH; x++)
+        {
+            char c = shared->map[y][x];
+            last[y][x] = c;
+            drawCell(y, x, c);
+        }
+    }
+    termGoto(MAX_MAP_HEIGHT + 1, 1);
+    ft_printf("\n");
+    *p_init = 1;
+}
+
 static void drawMap(int sig)
 {
     (void)sig;
     static char last[MAX_MAP_HEIGHT][MAX_MAP_WIDTH];
     static int init = 0;
     int same = 1;
+    if (!init)
+        fullDraw(last, &init);
     for (size_t y = 0; y < (size_t)MAX_MAP_HEIGHT; y++)
     {
         for (size_t x = 0; x < (size_t)MAX_MAP_WIDTH; x++)
         {
             char c = shared->map[y][x];
-            const char *col = colorFor(c);
-            ft_printf(" %s%c\033[0m ", col, c);
-            if (!init || last[y][x] != c)
+            if (last[y][x] != c)
+            {
                 same = 0;
-            last[y][x] = c;
+                last[y][x] = c;
+                drawCell(y, x, c);
+            }
         }
-        ft_printf("\n");
     }
-	ft_printf("\n");
-	init = 1;
+    termGoto(MAX_MAP_HEIGHT + 1, 1);
 	static int stagnant = 0;
 	if (same)
 		stagnant++;

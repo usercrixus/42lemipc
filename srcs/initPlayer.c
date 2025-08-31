@@ -19,7 +19,7 @@ static void handleMove()
 			sem_post(&shared->semGame);
 			break;
 		}
-		usleep(1000*1000*0.25);
+		usleep(1000*1000*0.01);
 		if (!isAlive(p))
 		{
 			shared->map[p->y][p->x] = EMPTY_TILE;
@@ -40,7 +40,7 @@ static void handleMove()
 		}
 		kill(shared->displayerPid, SIGUSR1);
 		sem_post(&shared->semGame);
-		usleep(1000*1000*0.25*shared->playersAlive);
+		usleep(1000*1000*0.01*shared->playersAlive);
 	}
 }
 
