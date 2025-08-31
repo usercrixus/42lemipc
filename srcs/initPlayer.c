@@ -106,12 +106,15 @@ static int initPlayer(char team)
 
 static void quit()
 {
+	sem_wait(&shared->semInit);
 	shared->playersAlive--;
 	if (shared->playersAlive == 0)
 	{
 		destroySharedMemory();
 		destroyMSGQueue();
 	}
+	else
+		sem_post(&shared->semInit);
 }
 
 bool launchPlayer(char team)

@@ -79,6 +79,8 @@ bool initSharedMemory()
 
 void destroySharedMemory()
 {
+	sem_destroy(&shared->semInit);
+	sem_destroy(&shared->semGame);
 	shmctl(shared->sharedMemoryId, IPC_RMID, NULL);
 }
 
