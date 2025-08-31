@@ -56,9 +56,8 @@ static void fullDraw(char last[MAX_MAP_HEIGHT][MAX_MAP_WIDTH], int *p_init)
     *p_init = 1;
 }
 
-static void drawMap(int sig)
+static void drawMap()
 {
-    (void)sig;
     static char last[MAX_MAP_HEIGHT][MAX_MAP_WIDTH];
     static int init = 0;
     int same = 1;
@@ -93,17 +92,18 @@ bool launchDisplayer()
         return (false);
     sem_wait(&shared->semInit);
     shared->displayerPid = getpid();
-    shared->playersAlive = shared->nextPlayerId - 1;
+    shared->playersAlive = shared->nextPlayerId;
+	destroySharedMemory();
+
     shared->isGameStarted = true;
-    signal(SIGUSR1, drawMap);
     sem_post(&shared->semInit);
     drawMap(0);
     sem_post(&shared->semGame);
-    while (true)
+    while (!isGameEnd())
     {
-        pause();
-        if (isGameEnd() || g_stalemate)
-            break;
+        drawMap();
+        usleep(1000*1000*0.1);
     }
+    drawMap();
     return (true);
 }

@@ -63,6 +63,9 @@ bool isGameEnd()
 {
 	char first = 0;
 	int seen = 0;
+
+	if (shared->playersAlive == 2)
+		return (true);
 	for (size_t y = 0; y < (size_t)MAX_MAP_HEIGHT; y++)
 	{
 		for (size_t x = 0; x < (size_t)MAX_MAP_WIDTH; x++)

@@ -35,7 +35,7 @@ typedef struct s_player
 typedef struct s_shared
 {
     int nextPlayerId;
-	int playersAlive;
+	_Atomic int playersAlive;
     int map[MAX_MAP_HEIGHT][MAX_MAP_WIDTH];
     t_player players[MAX_PLAYER];
     int sharedMemoryId;
