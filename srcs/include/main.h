@@ -7,6 +7,7 @@
 // Fixed grid size (3:1 proportion)
 #define MAX_MAP_HEIGHT 10
 #define MAX_MAP_WIDTH 30
+#define MAX_TEAM 9+26*2 // 9 digits (1-9) + 26 uppercase (A-Z) + 24 lowercase (a-z)
 #define EMPTY_TILE '0'
 #define TEAM_1_TILE '1'
 #define TEAM_2_TILE '2'

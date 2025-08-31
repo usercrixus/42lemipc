@@ -16,7 +16,6 @@ static void handleMove()
 		sem_wait(&shared->semGame);
 		if (isGameEnd())
 		{
-			kill(shared->displayerPid, SIGUSR1);
 			sem_post(&shared->semGame);
 			break;
 		}
@@ -24,6 +23,7 @@ static void handleMove()
 		if (!isAlive(p))
 		{
 			shared->map[p->y][p->x] = EMPTY_TILE;
+			shared->playersAlive--;
 			kill(shared->displayerPid, SIGUSR1);
 			sem_post(&shared->semGame);
 			break;
@@ -32,6 +32,8 @@ static void handleMove()
 		move(bestMove);
 		if (!isAlive(p))
 		{
+			shared->map[p->y][p->x] = EMPTY_TILE;
+			shared->playersAlive--;
 			kill(shared->displayerPid, SIGUSR1);
 			sem_post(&shared->semGame);
 			break;

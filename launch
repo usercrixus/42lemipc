@@ -31,12 +31,27 @@ fi
 TEAM_COUNT="$1"
 PLAYERS_PER_TEAM="$2"
 
-# Allowed team symbols: 1-9 then A-Z (no 0)
-SYMS=(1 2 3 4 5 6 7 8 9 A B C D E F G H I J K L M N O P Q R S T U V W X Y Z)
-MAX_TEAMS=${#SYMS[@]}
+# Allowed team symbols: 1-9, then A-Z, then a-i (no 0)
+SYMS=(1 2 3 4 5 6 7 8 9 \
+      A B C D E F G H I J K L M N O P Q R S T U V W X Y Z \
+      a b c d e f g h i)
+
+# Discover MAX_TEAM from headers (fallback to symbol count)
+MAX_TEAM_DEF=$(awk '/^#define[ \t]+MAX_TEAM[ \t]+([0-9]+)/{print $3; exit}' srcs/include/main.h 2>/dev/null || true)
+if [[ "$MAX_TEAM_DEF" =~ ^[0-9]+$ ]]; then
+  MAX_TEAMS="$MAX_TEAM_DEF"
+else
+  MAX_TEAMS=${#SYMS[@]}
+fi
 if (( TEAM_COUNT > MAX_TEAMS )); then
-  echo "Warning: capping team count to $MAX_TEAMS (available symbols)" >&2
+  echo "Warning: capping team count to $MAX_TEAMS (MAX_TEAM)" >&2
   TEAM_COUNT=$MAX_TEAMS
+fi
+# Also cap to available symbols length to avoid out-of-bounds
+SYM_COUNT=${#SYMS[@]}
+if (( TEAM_COUNT > SYM_COUNT )); then
+  echo "Warning: capping team count to $SYM_COUNT (available symbols)" >&2
+  TEAM_COUNT=$SYM_COUNT
 fi
 
 # Discover MAX_PLAYER from headers (total capacity across all teams)

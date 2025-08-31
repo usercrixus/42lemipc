@@ -14,6 +14,20 @@
         "errno.h": "c",
         "shm.h": "c",
         "pthread.h": "c",
-        "semaphore.h": "c"
+        "semaphore.h": "c",
+        "array": "c",
+        "deque": "c",
+        "string": "c",
+        "unordered_map": "c",
+        "vector": "c",
+        "functional": "c",
+        "iterator": "c",
+        "memory_resource": "c",
+        "optional": "c",
+        "numeric": "c",
+        "ostream": "c",
+        "streambuf": "c",
+        "tuple": "c",
+        "utility": "c"
     }
 }

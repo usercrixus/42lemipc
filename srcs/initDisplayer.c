@@ -8,7 +8,7 @@
 
 static volatile sig_atomic_t g_stalemate = 0;
 
-static const char *color_for(char c)
+static const char *colorFor(char c)
 {
 	static const char *palette[] = {
 		"\033[31m", "\033[32m", "\033[33m", "\033[34m", "\033[35m", "\033[36m", "\033[91m", "\033[92m", "\033[93m"};
@@ -36,7 +36,7 @@ static void drawMap(int sig)
         for (size_t x = 0; x < (size_t)MAX_MAP_WIDTH; x++)
         {
             char c = shared->map[y][x];
-            const char *col = color_for(c);
+            const char *col = colorFor(c);
             ft_printf(" %s%c\033[0m ", col, c);
             if (!init || last[y][x] != c)
                 same = 0;
