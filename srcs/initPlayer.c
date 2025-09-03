@@ -89,6 +89,7 @@ static int initPlayer(char team)
 	playerId = p->playerId;
 	shared->map[p->y][p->x] = p->symbole;
 	shared->nextPlayerId++;
+	shared->playersAlive++;
 	sem_post(&shared->semInit);
 	return (1);
 }
@@ -97,12 +98,14 @@ void quitPlayer(int sig)
 {
 	(void)sig;
 	shared->isEndGame = true;
+	sem_post(&shared->semGame);
+	// we can safely sem_post here, even if it look weird
+	// i cant find a beautyfull way to manage it cause of signal unsafety with sem_wait...
 }
 
 bool launchPlayer(char team)
 {
-	signal(SIGINT, quitPlayer);
-	if (!initSharedMemory())
+	if (!initSharedMemory(quitPlayer))
 		return (false);
 	if (!initPlayer(team))
 		return (false);

@@ -2,6 +2,6 @@
 
 #include <stdbool.h>
 
-bool initSharedMemory();
+bool initSharedMemory(void (*signalHandler)(int));
 void destroySharedMemory();
 void destroyMSGQueue();

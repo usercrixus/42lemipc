@@ -88,25 +88,28 @@ static void drawMap()
 
 void quitDisplayer(int sig)
 {
-	(void)sig;
-	shared->isEndGame = true;
+    (void)sig;
+    shared->isEndGame = true;
 }
 
 bool launchDisplayer()
 {
-    signal(SIGINT, quitDisplayer);
-    if (!initSharedMemory())
+    if (!initSharedMemory(quitDisplayer))
         return (false);
     sem_wait(&shared->semInit);
-    shared->playersAlive = shared->nextPlayerId;
-    shared->isGameStarted = true;
+    shared->isGameStarted = true; // no new player can join
+    if (shared->nextPlayerId == 0)
+    {
+        destroyMSGQueue();
+        destroySharedMemory();
+    }
+    else
+        sem_post(&shared->semGame); // game start
     sem_post(&shared->semInit);
-    drawMap(0);
-    sem_post(&shared->semGame);
     while (!isGameEnd())
     {
         drawMap();
-        usleep(1000*1000*0.1);
+        usleep(1000 * 1000 * 0.1);
     }
     drawMap();
     return (true);
