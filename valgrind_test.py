@@ -1,106 +1,85 @@
 #!/usr/bin/env python3
 import os
 import sys
-import time
-import glob
-import signal
+import shutil
 import subprocess
 from pathlib import Path
+import time
+
+TERMINALS = (
+    ("gnome-terminal", lambda title, cmd: [
+        "gnome-terminal", "--title", title, "--", "bash", "-lc", f"{cmd}; exec bash"
+    ]),
+    ("konsole", lambda title, cmd: [
+        "konsole", "--hold", "-p", f"tabtitle={title}", "-e", "bash", "-lc", f"{cmd}"
+    ]),
+    ("xfce4-terminal", lambda title, cmd: [
+        "xfce4-terminal", "--title", title, "--hold", "-e", f"bash -lc '{cmd}; exec bash'"
+    ]),
+    ("xterm", lambda title, cmd: [
+        "xterm", "-T", title, "-hold", "-e", "bash", "-lc", f"{cmd}; exec bash"
+    ]),
+    ("kitty", lambda title, cmd: [
+        "kitty", "--title", title, "bash", "-lc", f"{cmd}; exec bash"
+    ]),
+    ("alacritty", lambda title, cmd: [
+        "alacritty", "-t", title, "-e", "bash", "-lc", f"{cmd}; exec bash"
+    ]),
+    ("tilix", lambda title, cmd: [
+        "tilix", "-t", title, "-e", "bash", "-lc", f"{cmd}; exec bash"
+    ]),
+    ("wezterm", lambda title, cmd: [
+        "wezterm", "start", "--always-new-process", "--", "bash", "-lc", f"{cmd}; exec bash"
+    ]),
+)
 
 
+def find_terminal():
+    for name, builder in TERMINALS:
+        if shutil.which(name):
+            return name, builder
+    return None, None
+
+
+def open_in_terminal(title: str, command: str) -> None:
+    name, builder = find_terminal()
+    if not name:
+        raise RuntimeError(
+            "No emulator find."
+        )
+    cmd = builder(title, command)
+    subprocess.Popen(cmd)
+
+def wrap(cmd: str) -> str:
+    vg = "valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes"
+    return f"{vg} {cmd}"
+    
 def main() -> int:
-    # Work in repo root (where main.out is)
     base_dir = Path(__file__).resolve().parent
     os.chdir(base_dir)
 
-    # Fixed config: 2 teams, 2 players per team
-    teams = ["1", "2"]
-    players_per_team = 2
+    if not (base_dir / "main.out").exists():
+        print("no main.out. launch 'make' first.", file=sys.stderr)
+        return 1
 
-    # Prepare logs directory
-    logs_dir = base_dir / "valgrind-logs"
-    logs_dir.mkdir(exist_ok=True)
-    # Clear previous logs for this run pattern
-    for old in glob.glob(str(logs_dir / "valgrind-player-*.log")):
-        try:
-            os.remove(old)
-        except Exception:
-            pass
+    if not shutil.which("valgrind"):
+        print("No valgrind found.", file=sys.stderr)
+        return 1
 
-    procs: list[subprocess.Popen] = []
-
-    def start_player(sym: str, idx: int) -> subprocess.Popen:
-        log_file = logs_dir / f"valgrind-player-{sym}-{idx}.log"
-        cmd = [
-            "valgrind",
-            "--leak-check=full",
-            "--show-leak-kinds=all",
-            "--track-origins=yes",
-            f"--log-file={str(log_file)}",
-            "./main.out",
-            sym,
-        ]
-        return subprocess.Popen(cmd)
-
-    # Launch 4 players total (2 teams x 2 players each)
-    for sym in teams:
-        for idx in range(players_per_team):
-            procs.append(start_player(sym, idx))
-
-    print("Started 4 players under Valgrind (2 teams x 2).")
-
-    # Fixed duration: run for a short time, then stop automatically
-    DURATION_SECONDS = 5
     try:
-        time.sleep(DURATION_SECONDS)
-    except KeyboardInterrupt:
-        pass
-    finally:
-        # Gracefully terminate, then kill if needed
-        # Try graceful stop to let Valgrind flush logs
-        for p in procs:
-            if p.poll() is None:
-                try:
-                    p.send_signal(signal.SIGINT)
-                except Exception:
-                    pass
-        for p in procs:
-            try:
-                p.wait(timeout=1.0)
-            except Exception:
-                pass
-        # Escalate to SIGTERM, then SIGKILL if needed
-        for p in procs:
-            if p.poll() is None:
-                try:
-                    p.terminate()
-                except Exception:
-                    pass
-        for p in procs:
-            try:
-                p.wait(timeout=1.0)
-            except Exception:
-                try:
-                    p.kill()
-                except Exception:
-                    pass
-
-    # Print quick Valgrind summaries
-    print("\nValgrind summaries:")
-    for sym in teams:
-        for idx in range(players_per_team):
-            path = logs_dir / f"valgrind-player-{sym}-{idx}.log"
-            label = f"player {sym} #{idx}"
-            try:
-                with open(path, "r", encoding="utf-8", errors="ignore") as f:
-                    lines = f.readlines()
-                summary = next((ln.strip() for ln in lines if ln.startswith("ERROR SUMMARY")), None)
-                print(f"- {label}: {summary or 'no summary found'}")
-            except FileNotFoundError:
-                print(f"- {label}: log not found ({path.name})")
-            except Exception as e:
-                print(f"- {label}: failed to read log ({e})")
-
+        teams = ["1", "2"]
+        players_per_team = 2
+        for sym in teams:
+            for i in range(players_per_team):
+                title = f"player team {sym} #{i+1}"
+                open_in_terminal(title, wrap(f"./main.out {sym}"))
+        time.sleep(0.5)
+        open_in_terminal("displayer", wrap("./main.out"))
+        print(
+            f"Launch: displayer + {len(teams)} teams x {players_per_team} player (with valgrind).")
+    except Exception as e:
+        print(f"Erreur: {e}", file=sys.stderr)
+        return 1
     return 0
 
 

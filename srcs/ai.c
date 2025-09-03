@@ -267,7 +267,7 @@ t_move getBestMove()
     if (msgid == -1)
         return STAY;
 
-    t_msg_target msg;
+    t_msg_target msg = {0};
     ssize_t sz = sizeof(t_msg_target) - sizeof(long);
     int have_msg = (msgrcv(msgid, &msg, sz, (long)me->symbole, IPC_NOWAIT) >= 0);
 
@@ -299,10 +299,12 @@ t_move getBestMove()
                 return STAY;
         }
     }
-    msg.mtype = (long)me->symbole;
+    // Ensure no padding bytes remain uninitialized in mtext
+    msg.mtype = 0;
     msg.targetX = tx;
     msg.targetY = ty;
     msg.team = me->symbole;
+    msg.mtype = (long)me->symbole;
     msgsnd(msgid, &msg, sz, IPC_NOWAIT);
     return stepToward(tx, ty);
 }
