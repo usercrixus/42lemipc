@@ -65,6 +65,22 @@ bool isGameEnd()
 		return (true);
 	if (shared->playersAlive <= 2)
 		return (true);
-	return (false);
-}
 
+	char first = 0;
+	int seen = 0;
+	for (size_t y = 0; y < (size_t)MAP_HEIGHT; y++)
+	{
+		for (size_t x = 0; x < (size_t)MAP_WIDTH; x++)
+		{
+			char c = shared->map[y][x];
+			if (c == EMPTY_TILE)
+				continue;
+			seen = 1;
+			if (first == 0)
+				first = c;
+			else if (c != first)
+				return (false);
+		}
+	}
+	return (seen == 0) || (first != 0);
+}
