@@ -36,6 +36,7 @@ typedef struct s_shared
     t_player players[MAX_PLAYER];
     int sharedMemoryId;
     bool isGameStarted;
+	bool isEndGame;
     sem_t semGame;
 	sem_t semInit;
 	bool isSegmentInitialized;

@@ -86,8 +86,15 @@ static void drawMap()
         g_stalemate = 1;
 }
 
+void quitDisplayer(int sig)
+{
+	(void)sig;
+	shared->isEndGame = true;
+}
+
 bool launchDisplayer()
 {
+    signal(SIGINT, quitDisplayer);
     if (!initSharedMemory())
         return (false);
     sem_wait(&shared->semInit);

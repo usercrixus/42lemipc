@@ -11,12 +11,11 @@
 static void handleMove()
 {
 	t_player *p = &shared->players[playerId];
-	while (true)
+	while (!shared->isEndGame)
 	{
 		sem_wait(&shared->semGame);
 		if (isGameEnd())
 		{
-			shared->playersAlive--;
 			sem_post(&shared->semGame);
 			break;
 		}
@@ -24,7 +23,6 @@ static void handleMove()
 		if (!isAlive(p))
 		{
 			shared->map[p->y][p->x] = EMPTY_TILE;
-			shared->playersAlive--;
 			sem_post(&shared->semGame);
 			break;
 		}
@@ -33,7 +31,6 @@ static void handleMove()
 		if (!isAlive(p))
 		{
 			shared->map[p->y][p->x] = EMPTY_TILE;
-			shared->playersAlive--;
 			sem_post(&shared->semGame);
 			break;
 		}
@@ -96,24 +93,21 @@ static int initPlayer(char team)
 	return (1);
 }
 
-static void quit()
+void quitPlayer(int sig)
 {
-	if (--shared->playersAlive == 0)
-	{
-		destroyMSGQueue();
-		destroySharedMemory();
-	}
+	(void)sig;
+	shared->isEndGame = true;
 }
 
 bool launchPlayer(char team)
 {
-	signal(SIGINT, quit);
+	signal(SIGINT, quitPlayer);
 	if (!initSharedMemory())
 		return (false);
 	if (!initPlayer(team))
 		return (false);
 	handleMove();
-	if (shared->playersAlive == 0)
+	if (--shared->playersAlive == 0)
 	{
 		destroyMSGQueue();
 		destroySharedMemory();

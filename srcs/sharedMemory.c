@@ -25,6 +25,7 @@ static bool shmCreation(int shm_id)
     shared->sharedMemoryId = shm_id;
     shared->nextPlayerId = 0;
     shared->isGameStarted = false;
+	shared->isEndGame = false;
     initMap();
     sem_init(&shared->semGame, 1, 0);
     sem_init(&shared->semInit, 1, 1);
