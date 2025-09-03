@@ -10,9 +10,9 @@
 
 static void initMap()
 {
-	for (size_t y = 0; y < (size_t)MAX_MAP_HEIGHT; y++)
+	for (size_t y = 0; y < (size_t)MAP_HEIGHT; y++)
 	{
-		for (size_t x = 0; x < (size_t)MAX_MAP_WIDTH; x++)
+		for (size_t x = 0; x < (size_t)MAP_WIDTH; x++)
 			shared->map[y][x] = EMPTY_TILE;
 	}
 }
@@ -37,19 +37,6 @@ static bool shmAlreadyExist(int key)
 	int shm_id = shmget(key, 0, 0666);
 	if (shm_id == -1)
 		return (perror("shmget existing"), false);
-	struct shmid_ds ds;
-	if (shmctl(shm_id, IPC_STAT, &ds) == -1)
-		return (perror("shmctl IPC_STAT"), false);
-	if (ds.shm_segsz != sizeof(t_shared))
-	{
-		// Old segment has different size: recreate with new layout
-		if (shmctl(shm_id, IPC_RMID, NULL) == -1)
-			return (perror("shmctl IPC_RMID"), false);
-		int new_id = shmget(key, sizeof(t_shared), IPC_CREAT | IPC_EXCL | 0666);
-		if (new_id == -1)
-			return (perror("shmget recreate"), false);
-		return shmCreation(new_id);
-	}
 	shared = shmat(shm_id, NULL, 0);
 	if (shared == (void *)-1)
 		return (perror("shmat"), false);
@@ -86,7 +73,13 @@ void destroySharedMemory()
 
 void destroyMSGQueue()
 {
-	int msgid = msgget(MSGQ_KEY, 0666);
-	if (msgid >= 0)
-		msgctl(msgid, IPC_RMID, NULL);
+	key_t key = ftok(".gitmodules", 130);
+	if (key == -1)
+		perror("ftok");
+	else
+	{
+		int msgid = msgget(key, 0666);
+		if (msgid >= 0)
+			msgctl(msgid, IPC_RMID, NULL);
+	}
 }

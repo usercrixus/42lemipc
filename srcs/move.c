@@ -5,8 +5,8 @@ static void effectiveMove(int dx, int dy)
 	t_player *player = &shared->players[playerId];
 	int new_x = player->x + dx;
 	int new_y = player->y + dy;
-    if (!(new_x < 0 || new_x >= MAX_MAP_WIDTH || new_y < 0 || new_y >= MAX_MAP_HEIGHT))
-    {
+	if (!(new_x < 0 || new_x >= MAP_WIDTH || new_y < 0 || new_y >= MAP_HEIGHT))
+	{
 		if (shared->map[new_y][new_x] == EMPTY_TILE)
 		{
 			shared->map[player->y][player->x] = EMPTY_TILE;

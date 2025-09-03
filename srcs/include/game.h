@@ -5,4 +5,4 @@
 
 int isAlive(t_player *p);
 bool isGameEnd();
-void resolveDeaths();
+

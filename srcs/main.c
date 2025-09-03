@@ -11,7 +11,6 @@ int playerId;
 
 static int isValidTeam(char c)
 {
-    // Allowed: '1'-'9', 'A'-'Z', 'a'-'z' (total MAX_TEAM)
     if (c >= '1' && c <= '9')
         return 1;
     if (c >= 'A' && c <= 'Z')

@@ -3,13 +3,19 @@
 #include <errno.h>
 #include <stdlib.h>
 #include <limits.h>
+#include <stdio.h>
 
 static int getMsgid()
 {
-	static int msgid = -1;
-	if (msgid == -1)
-		msgid = msgget(MSGQ_KEY, IPC_CREAT | 0666);
-	return msgid;
+    static int msgid = -1;
+    if (msgid == -1)
+    {
+        key_t key = ftok(".gitmodules", 130);
+        if (key == -1)
+            perror("ftok");
+        msgid = msgget(key, IPC_CREAT | 0666);
+    }
+    return msgid;
 }
 
 static int getCountEnemyThreatsAt(int x, int y, char me)
@@ -23,7 +29,7 @@ static int getCountEnemyThreatsAt(int x, int y, char me)
                 continue;
             int nx = x + dx;
             int ny = y + dy;
-            if (nx < 0 || nx >= MAX_MAP_WIDTH || ny < 0 || ny >= MAX_MAP_HEIGHT)
+            if (nx < 0 || nx >= MAP_WIDTH || ny < 0 || ny >= MAP_HEIGHT)
                 continue;
             char c = shared->map[ny][nx];
             if (c != EMPTY_TILE && c != me)
@@ -49,7 +55,7 @@ static int getCountAlliedThreatsAround(int tx, int ty, char team)
                 continue;
             int nx = tx + dx;
             int ny = ty + dy;
-            if (nx < 0 || nx >= MAX_MAP_WIDTH || ny < 0 || ny >= MAX_MAP_HEIGHT)
+            if (nx < 0 || nx >= MAP_WIDTH || ny < 0 || ny >= MAP_HEIGHT)
                 continue;
             if (shared->map[ny][nx] == team)
                 cnt++;
@@ -60,7 +66,7 @@ static int getCountAlliedThreatsAround(int tx, int ty, char team)
 
 static int isEnemyAt(int x, int y, char me)
 {
-    if (x < 0 || x >= MAX_MAP_WIDTH || y < 0 || y >= MAX_MAP_HEIGHT)
+    if (x < 0 || x >= MAP_WIDTH || y < 0 || y >= MAP_HEIGHT)
         return 0;
     char c = shared->map[y][x];
     return (c != EMPTY_TILE && c != me);
@@ -76,85 +82,24 @@ static int hasEmptyAdjacent(int x, int y)
                 continue;
             int nx = x + dx;
             int ny = y + dy;
-            if (nx < 0 || nx >= MAX_MAP_WIDTH || ny < 0 || ny >= MAX_MAP_HEIGHT)
+            if (nx < 0 || nx >= MAP_WIDTH || ny < 0 || ny >= MAP_HEIGHT)
                 continue;
             if (shared->map[ny][nx] == EMPTY_TILE)
                 return 1;
         }
     }
-	return 0;
+    return 0;
 }
 
-static int setNearestEnemy(int *tx, int *ty)
-{
-    t_player *me = &shared->players[playerId];
-    int bestD = INT_MAX;
-    int bx = me->x;
-    int by = me->y;
-
-    for (int y = 0; y < MAX_MAP_HEIGHT; y++)
-    {
-        for (int x = 0; x < MAX_MAP_WIDTH; x++)
-        {
-            char c = shared->map[y][x];
-            if (c != EMPTY_TILE && c != me->symbole)
-            {
-                int d = abs(x - me->x) + abs(y - me->y);
-				if (d < bestD)
-				{
-					bestD = d;
-					bx = x;
-					by = y;
-				}
-			}
-		}
-	}
-	if (bestD == INT_MAX)
-		return 0;
-	*tx = bx;
-	*ty = by;
-	return 1;
-}
-
-static int setNearestKillableEnemy(int *tx, int *ty)
-{
-	t_player *me = &shared->players[playerId];
-	int bestD = INT_MAX;
-	int bx = me->x;
-	int by = me->y;
-    for (int y = 0; y < MAX_MAP_HEIGHT; y++)
-    {
-        for (int x = 0; x < MAX_MAP_WIDTH; x++)
-        {
-            if (isEnemyAt(x, y, me->symbole) && hasEmptyAdjacent(x, y))
-            {
-                int d = abs(x - me->x) + abs(y - me->y);
-                if (d < bestD)
-				{
-					bestD = d;
-					bx = x;
-					by = y;
-				}
-			}
-		}
-	}
-	if (bestD == INT_MAX)
-		return 0;
-	*tx = bx;
-	*ty = by;
-	return 1;
-}
-
-// Same as above, but compute distance from an arbitrary reference point (rx, ry)
 static int setNearestEnemyFrom(int rx, int ry, int *tx, int *ty)
 {
     int bestD = INT_MAX;
     int bx = rx;
     int by = ry;
 
-    for (int y = 0; y < MAX_MAP_HEIGHT; y++)
+    for (int y = 0; y < MAP_HEIGHT; y++)
     {
-        for (int x = 0; x < MAX_MAP_WIDTH; x++)
+        for (int x = 0; x < MAP_WIDTH; x++)
         {
             char c = shared->map[y][x];
             if (c != EMPTY_TILE)
@@ -186,9 +131,9 @@ static int setNearestKillableEnemyFrom(int rx, int ry, int *tx, int *ty)
     int bx = rx;
     int by = ry;
     char myTeam = shared->players[playerId].symbole;
-    for (int y = 0; y < MAX_MAP_HEIGHT; y++)
+    for (int y = 0; y < MAP_HEIGHT; y++)
     {
-        for (int x = 0; x < MAX_MAP_WIDTH; x++)
+        for (int x = 0; x < MAP_WIDTH; x++)
         {
             char c = shared->map[y][x];
             if (c == EMPTY_TILE || c == myTeam)
@@ -214,7 +159,7 @@ static int setNearestKillableEnemyFrom(int rx, int ry, int *tx, int *ty)
 static t_move stepToward(int tx, int ty)
 {
     t_player *me = &shared->players[playerId];
-    int dirs[4][2] = { {-1,0}, {1,0}, {0,-1}, {0,1} };
+    int dirs[4][2] = {{-1, 0}, {1, 0}, {0, -1}, {0, 1}};
     int bestScore = INT_MIN;
     int bestDx = 0;
     int bestDy = 0;
@@ -225,7 +170,7 @@ static t_move stepToward(int tx, int ty)
         int ndy = dirs[i][1];
         int nx = me->x + ndx;
         int ny = me->y + ndy;
-        if (!(nx >= 0 && nx < MAX_MAP_WIDTH && ny >= 0 && ny < MAX_MAP_HEIGHT))
+        if (!(nx >= 0 && nx < MAP_WIDTH && ny >= 0 && ny < MAP_HEIGHT))
             continue;
         if (shared->map[ny][nx] != EMPTY_TILE)
             continue;
@@ -253,10 +198,14 @@ static t_move stepToward(int tx, int ty)
     }
     if (!found)
         return STAY;
-    if (bestDx == -1 && bestDy == 0) return LEFT;
-    if (bestDx == 1 && bestDy == 0)  return RIGHT;
-    if (bestDx == 0 && bestDy == -1) return TOP;
-    if (bestDx == 0 && bestDy == 1)  return BOT;
+    if (bestDx == -1 && bestDy == 0)
+        return LEFT;
+    if (bestDx == 1 && bestDy == 0)
+        return RIGHT;
+    if (bestDx == 0 && bestDy == -1)
+        return TOP;
+    if (bestDx == 0 && bestDy == 1)
+        return BOT;
     return STAY;
 }
 
@@ -293,9 +242,9 @@ t_move getBestMove()
     else
     {
         // No prior team target; pick relative to our own position as before
-        if (!setNearestKillableEnemy(&tx, &ty))
+        if (!setNearestKillableEnemyFrom(shared->players[playerId].x, shared->players[playerId].y, &tx, &ty))
         {
-            if (!setNearestEnemy(&tx, &ty))
+            if (!setNearestEnemyFrom(shared->players[playerId].x, shared->players[playerId].y, &tx, &ty))
                 return STAY;
         }
     }

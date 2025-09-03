@@ -45,11 +45,11 @@ static void handleMove()
 static int initPlayerPosition(t_player *p)
 {
 	// Try random empty tiles first for better dispersion
-	int tries = MAX_MAP_HEIGHT * MAX_MAP_WIDTH * 2;
+	int tries = MAP_HEIGHT * MAP_WIDTH * 2;
 	for (int t = 0; t < tries; t++)
 	{
-		int y = rand() % MAX_MAP_HEIGHT;
-		int x = rand() % MAX_MAP_WIDTH;
+		int y = rand() % MAP_HEIGHT;
+		int x = rand() % MAP_WIDTH;
 		if (shared->map[y][x] == EMPTY_TILE)
 		{
 			p->x = x;
@@ -59,13 +59,13 @@ static int initPlayerPosition(t_player *p)
 		}
 	}
 	// Fallback to deterministic scan if random failed (very unlikely)
-	int startY = rand() % MAX_MAP_HEIGHT;
-	int startX = rand() % MAX_MAP_WIDTH;
-	for (int offset = 0; offset < MAX_MAP_HEIGHT * MAX_MAP_WIDTH; offset++)
+	int startY = rand() % MAP_HEIGHT;
+	int startX = rand() % MAP_WIDTH;
+	for (int offset = 0; offset < MAP_HEIGHT * MAP_WIDTH; offset++)
 	{
-		int index = (startY * MAX_MAP_WIDTH + startX + offset) % (MAX_MAP_HEIGHT * MAX_MAP_WIDTH);
-		int y = index / MAX_MAP_WIDTH;
-		int x = index % MAX_MAP_WIDTH;
+		int index = (startY * MAP_WIDTH + startX + offset) % (MAP_HEIGHT * MAP_WIDTH);
+		int y = index / MAP_WIDTH;
+		int x = index % MAP_WIDTH;
 		if (shared->map[y][x] == EMPTY_TILE)
 		{
 			p->x = x;

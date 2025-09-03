@@ -5,15 +5,11 @@
 #include <semaphore.h>
 
 // Fixed grid size (3:1 proportion)
-#define MAX_MAP_HEIGHT 30
-#define MAX_MAP_WIDTH 30
+#define MAP_HEIGHT 30
+#define MAP_WIDTH 30
 #define MAX_TEAM 9+26*2 // 9 digits (1-9) + 26 uppercase (A-Z) + 24 lowercase (a-z)
 #define EMPTY_TILE '0'
-#define TEAM_1_TILE '1'
-#define TEAM_2_TILE '2'
-#define MAX_PLAYER (MAX_MAP_HEIGHT * MAX_MAP_WIDTH / 2)
-#define MSGQ_KEY 4242
-#define MSG_TYPE_TARGET 1
+#define MAX_PLAYER (MAP_HEIGHT * MAP_WIDTH / 2)
 
 typedef enum e_move
 {
@@ -36,7 +32,7 @@ typedef struct s_shared
 {
     int nextPlayerId;
 	_Atomic int playersAlive;
-    int map[MAX_MAP_HEIGHT][MAX_MAP_WIDTH];
+    int map[MAP_HEIGHT][MAP_WIDTH];
     t_player players[MAX_PLAYER];
     int sharedMemoryId;
     bool isGameStarted;

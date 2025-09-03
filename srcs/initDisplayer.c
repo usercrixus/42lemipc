@@ -39,33 +39,33 @@ static void drawCell(size_t y, size_t x, char c)
     ft_printf(" %s%c\033[0m ", col, c);
 }
 
-static void fullDraw(char last[MAX_MAP_HEIGHT][MAX_MAP_WIDTH], int *p_init)
+static void fullDraw(char last[MAP_HEIGHT][MAP_WIDTH], int *p_init)
 {
     ft_printf("\033[2J\033[H");
-    for (size_t y = 0; y < (size_t)MAX_MAP_HEIGHT; y++)
+    for (size_t y = 0; y < (size_t)MAP_HEIGHT; y++)
     {
-        for (size_t x = 0; x < (size_t)MAX_MAP_WIDTH; x++)
+        for (size_t x = 0; x < (size_t)MAP_WIDTH; x++)
         {
             char c = shared->map[y][x];
             last[y][x] = c;
             drawCell(y, x, c);
         }
     }
-    termGoto(MAX_MAP_HEIGHT + 1, 1);
+    termGoto(MAP_HEIGHT + 1, 1);
     ft_printf("\n");
     *p_init = 1;
 }
 
 static void drawMap()
 {
-    static char last[MAX_MAP_HEIGHT][MAX_MAP_WIDTH];
+    static char last[MAP_HEIGHT][MAP_WIDTH];
     static int init = 0;
     int same = 1;
     if (!init)
         fullDraw(last, &init);
-    for (size_t y = 0; y < (size_t)MAX_MAP_HEIGHT; y++)
+    for (size_t y = 0; y < (size_t)MAP_HEIGHT; y++)
     {
-        for (size_t x = 0; x < (size_t)MAX_MAP_WIDTH; x++)
+        for (size_t x = 0; x < (size_t)MAP_WIDTH; x++)
         {
             char c = shared->map[y][x];
             if (last[y][x] != c)
@@ -76,7 +76,7 @@ static void drawMap()
             }
         }
     }
-    termGoto(MAX_MAP_HEIGHT + 1, 1);
+    termGoto(MAP_HEIGHT + 1, 1);
     static int stagnant = 0;
     if (same)
         stagnant++;
