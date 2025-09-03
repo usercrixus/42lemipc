@@ -91,10 +91,7 @@ bool launchDisplayer()
     if (!initSharedMemory())
         return (false);
     sem_wait(&shared->semInit);
-    shared->displayerPid = getpid();
     shared->playersAlive = shared->nextPlayerId;
-	destroySharedMemory();
-
     shared->isGameStarted = true;
     sem_post(&shared->semInit);
     drawMap(0);

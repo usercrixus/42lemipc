@@ -100,8 +100,8 @@ static void quit()
 {
 	if (--shared->playersAlive == 0)
 	{
-		destroySharedMemory();
 		destroyMSGQueue();
+		destroySharedMemory();
 	}
 }
 
@@ -115,8 +115,8 @@ bool launchPlayer(char team)
 	handleMove();
 	if (shared->playersAlive == 0)
 	{
-		destroySharedMemory();
 		destroyMSGQueue();
+		destroySharedMemory();
 	}
 	return (true);
 }

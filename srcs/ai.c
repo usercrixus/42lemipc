@@ -252,7 +252,6 @@ t_move getBestMove()
     msg.mtype = 0;
     msg.targetX = tx;
     msg.targetY = ty;
-    msg.team = me->symbole;
     msg.mtype = (long)me->symbole;
     msgsnd(msgid, &msg, sz, IPC_NOWAIT);
     return stepToward(tx, ty);
