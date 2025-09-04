@@ -24,6 +24,7 @@ static bool shmCreation(int shm_id)
 		return (perror("shmat"), false);
 	shared->sharedMemoryId = shm_id;
 	shared->nextPlayerId = 0;
+	shared->playersAlive = 0;
 	shared->isGameStarted = false;
 	shared->isEndGame = false;
 	initMap();

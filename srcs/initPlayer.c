@@ -7,13 +7,18 @@
 #include "42libft/ft_printf/ft_printf.h"
 #include <signal.h>
 #include <unistd.h>
+#include <stdio.h>
 
 static void handleMove()
 {
 	t_player *p = &shared->players[playerId];
 	while (!shared->isEndGame)
 	{
-		sem_wait(&shared->semGame);
+		if (sem_wait(&shared->semGame) == -1)
+		{
+			perror("sem_wait");
+			break;
+		}
 		if (isGameEnd())
 		{
 			sem_post(&shared->semGame);

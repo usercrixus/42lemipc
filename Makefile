@@ -14,10 +14,10 @@ submodule:
 
 main.out: $(OBJ)
 	make -C srcs/42libft/
-	gcc -Wall -Wextra -Werror -Isrcs/include $^ -Lsrcs/42libft/ft_printf/ -lftprintf -o $@
+	gcc -Wall -Wextra -Werror -Isrcs/include $^ -pthread -Lsrcs/42libft/ft_printf/ -lftprintf -o $@
 
 %.o: %.c
-	gcc -Wall -Wextra -Werror -Isrcs/include -c $^ -o $@
+	gcc -Wall -Wextra -Werror -Isrcs/include -pthread -c $^ -o $@
 
 clean:
 	rm -f $(OBJ)
