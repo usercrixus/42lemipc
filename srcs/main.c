@@ -32,7 +32,7 @@ int main(int argc, char const *argv[])
     else if (argc == 2)
     {
         if (!isValidTeam(argv[1][0]))
-            return (ft_printf("Invalid team symbol. Use 1-9, A-Z, or a-i (max %d teams)\n", MAX_TEAM), 1);
+            return (ft_printf("Invalid team symbol. Use 1-9, A-Z, or a-z (max %d teams)\n", MAX_TEAM), 1);
         if (!launchPlayer(argv[1][0]))
             return (1);
         return (0);
