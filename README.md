@@ -5,6 +5,10 @@ Each player is its own process, belongs to a team, and moves on a grid; a
 displayer renders the board in the terminal. Goal: teams coordinate via IPC to
 outnumber/eliminate opponents until one team remains.
 
+<p align="center">
+  <img src="doc/lemIPC.gif" alt="lemIPC gameplay preview" />
+</p>
+
 **Game Logic**
 - **Map:** 30×30 grid; `EMPTY_TILE` marks free cells. Each player uses a unique team symbol.
 - **Turns/Locking:** A single process‑shared semaphore (`semGame`) serializes map updates. Players acquire, move, then release; the displayer only reads.
