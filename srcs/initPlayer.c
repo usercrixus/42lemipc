@@ -16,7 +16,7 @@ static void handleMove()
 	{
 		if (sem_wait(&shared->semGame) == -1)
 		{
-			perror("sem_wait");
+			// perror("sem_wait"); commented to avoid weird display on ctrl-c
 			break;
 		}
 		if (isGameEnd())
@@ -83,7 +83,13 @@ static int initPlayer(char team)
 {
 	sem_wait(&shared->semInit);
 	if (shared->isGameStarted)
-		return (sem_post(&shared->semInit), ft_printf("The game already started, sorry"), 0);
+	{
+		if (!shared->isEndGame)
+			ft_printf("The game already started, sorry");
+		else
+			ft_printf("Let time to cleaning after ctrl-c retard !\n");
+		return (sem_post(&shared->semInit), 0);
+	}
 	if (shared->nextPlayerId == MAX_PLAYER)
 		return (sem_post(&shared->semInit), ft_printf("Max number of player reached"), 0);
 	t_player *p = &shared->players[shared->nextPlayerId];

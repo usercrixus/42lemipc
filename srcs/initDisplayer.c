@@ -97,6 +97,8 @@ bool launchDisplayer()
     if (!initSharedMemory(quitDisplayer))
         return (false);
     sem_wait(&shared->semInit);
+    if (shared->isGameStarted == true)
+        return (sem_post(&shared->semInit), ft_printf("Let time to cleaning after ctrl-c retard !\n"), 1);
     shared->isGameStarted = true; // no new player can join
     if (shared->nextPlayerId == 0)
     {

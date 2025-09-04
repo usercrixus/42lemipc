@@ -5,6 +5,16 @@ Each player is its own process, belongs to a team, and moves on a grid; a
 displayer renders the board in the terminal. Goal: teams coordinate via IPC to
 outnumber/eliminate opponents until one team remains.
 
+**Game Logic**
+- **Map:** 30×30 grid; `EMPTY_TILE` marks free cells. Each player uses a unique team symbol.
+- **Turns/Locking:** A single process‑shared semaphore (`semGame`) serializes map updates. Players acquire, move, then release; the displayer only reads.
+- **Movement:** 1 cell per tick into empty cells. The AI heads toward a shared team target via SysV message queue or the nearest enemy, avoiding high‑risk squares.
+- **Elimination:** A player dies when it has two or more adjacent enemies in the 8‑neighbor ring; on death, its tile is cleared.
+- **Start:** The displayer starts the match and prevents late joins once running; players spawn on random empty cells before start.
+- **End Conditions:** Game ends on an explicit quit, when `playersAlive <= 2`, or when the board contains pieces from a single team.
+- **Cleanup:** The last exiting player removes the message queue and marks shared memory for deletion; existing attachments remain valid until processes detach/exit.
+- **Display:** Unlocked reads for speed; brief tearing may occur and is acceptable.
+
 Build & Run
 - Build: `make`
 - Quick start (spawns players then the displayer): `./launch.py <teams> <players_per_team>`
